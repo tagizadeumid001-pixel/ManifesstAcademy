@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manifest Academy | Final Tam Versiya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { --primary: #0071e3; --bg: #f5f5f7; --danger: #ff3b30; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { background: #f0f4f8; color: #1d1d1f; line-height: 1.6; overflow-x: hidden; }
+        
+        nav { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(255,255,255,0.9); backdrop-filter: blur(15px); display: flex; align-items: center; justify-content: space-between; padding: 0 5%; z-index: 5000; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .logo { font-size: 18px; font-weight: 800; color: var(--primary); cursor: pointer; }
+
+        .page { display: none; padding: 90px 5% 50px; width: 100%; }
+        .page.active { display: block; }
+
+        .btn { padding: 14px 20px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; justify-content: center; width: 100%; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; padding: 8px 12px; border-radius: 8px; font-size: 12px; width: auto; }
+        .btn-outline { background: white; color: #1d1d1f; border: 1px solid #ddd; margin-bottom: 20px; }
+
+        input, textarea, select { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 8px 0; 
+            border: 1px solid #d2d2d7; 
+            border-radius: 12px; 
+            font-size: 16px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        .results-card { background: white; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; width: 100%; }
+        .result-row { display: grid; grid-template-columns: 40px 1.5fr 1fr 1fr; padding: 15px; border-bottom: 1px solid #f5f5f7; align-items: center; font-size: 14px; }
+
+        .q-node { 
+            border: 1px solid #eee; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 16px; 
+            background: #fff; 
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .opt-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin: 10px 0; 
+        }
+        /* E variantı mobil ekranda tək qalsa tam eni tutsun */
+        .opt-grid .opt:last-child:nth-child(odd) { grid-column: span 2; }
+
+        #examStage { position: fixed; inset: 0; background: #f5f5f7; z-index: 6000; display: none; padding: 20px 5%; overflow-y: auto; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 7000; padding: 15px; }
+        .modal-content { background: white; padding: 25px; border-radius: 24px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+
+        .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        .filter-btn { padding: 8px 16px; border-radius: 20px; background: white; border: 1px solid #ddd; cursor: pointer; white-space: nowrap; font-size: 13px; font-weight: 600; }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo" id="navLogo">MANIFEST ACADEMY</div>
+        <div id="adminTrigger" style="padding: 10px; color: #ccc;"><i class="fas fa-cog"></i></div>
+    </nav>
+
+    <div id="homePage" class="page active">
+        <div style="text-align: center; margin-bottom: 25px;">
+            <h2 style="font-weight: 800;">Nəticələr</h2>
+            <button class="btn btn-primary" id="btnGoToExams" style="margin-top: 15px; width: auto;">Sınaqlara Keç</button>
+        </div>
+        <div class="filter-bar" id="filterBar">
+            <button class="filter-btn active" data-filter="all">Hamısı</button>
+            <button class="filter-btn" data-filter="5">5 Sinif</button>
+            <button class="filter-btn" data-filter="6">6 Sinif</button>
+            <button class="filter-btn" data-filter="7">7 Sinif</button>
+            <button class="filter-btn" data-filter="8">8 Sinif</button>
+            <button class="filter-btn" data-filter="9">9 Sinif</button>
+            <button class="filter-btn" data-filter="10">10 Sinif</button>
+            <button class="filter-btn" data-filter="11">11 Sinif</button>
+        </div>
+        <div class="results-card"><div id="results-list"></div></div>
+    </div>
+
+    <div id="examsPage" class="page">
+        <button class="btn btn-outline" id="btnBackHome">Geri Qayıt</button>
+        <div id="exam-list"></div>
+    </div>
+
+    <div id="adminLoginModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:15px; text-align:center;">Admin Paneli</h3>
+            <input type="password" id="adminPassInput" placeholder="Sistem şifrəsi">
+            <button class="btn btn-primary" id="btnSubmitAdmin">Daxil Ol</button>
+        </div>
+    </div>
+
+    <div id="adminPanelModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 style="margin-bottom:15px;">Sınaq Yarat</h2>
+            <input type="text" id="inpExTitle" placeholder="Sınağın adı">
+            <div style="display:flex; gap:8px;">
+                <input type="number" id="inpExTime" placeholder="Dəqiqə">
+                <select id="inpExClass">
+                    <option value="5">5-ci sinif</option><option value="6">6-cı sinif</option><option value="7">7-ci sinif</option><option value="8">8-ci sinif</option><option value="9">9-cu sinif</option><option value="10">10-cu sinif</option><option value="11">11-ci sinif</option>
+                </select>
+            </div>
+            <input type="text" id="inpExSecret" placeholder="Sınaq Şifrəsi (Opsional)">
+            <input type="text" id="inpAudio" placeholder="Audio URL (Listening üçün)">
+            
+            <button class="btn btn-outline" id="btnAddReading" style="margin-top:10px;">+ Reading Mətni Əlavə Et</button>
+            <div id="read-blocks"></div>
+            
+            <div style="margin-top:20px;">
+                <h4>Listening Sualları:</h4>
+                <input type="number" id="cntList" placeholder="Sual sayı yazın...">
+                <div id="list-qs"></div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <h4>Grammar Sualları:</h4>
+                <input type="number" id="cntGram" placeholder="Sual sayı yazın...">
+                <div id="gram-qs"></div>
+            </div>
+
+            <button class="btn btn-primary" style="margin: 25px 0;" id="btnSaveExam">SINAĞI PAYLAŞ</button>
+            <hr>
+            <div id="adm-exams-list" style="margin-top:15px;"></div>
+            <div id="adm-results-list" style="margin-top:15px;"></div>
+            <button class="btn btn-outline" onclick="location.reload()" style="margin-top:20px;">Bağla</button>
+        </div>
+    </div>
+
+    <div id="examStage">
+        <div id="timerDisplay" style="background:var(--danger); color:white; padding:12px; text-align:center; font-weight:800; border-radius:12px; position: sticky; top: 0; z-index: 100;">00:00</div>
+        <div id="stage-content" style="margin-top: 15px;"></div>
+        <button class="btn btn-primary" id="btnFinishExam" style="height:60px; margin:25px 0;">SINAĞI BİTİR</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh7EGPky3NxbmtTQCzS2_-HTS0pT_wMNA",
+            authDomain: "profit-7fa47.firebaseapp.com",
+            databaseURL: "https://profit-7fa47-default-rtdb.firebaseio.com",
+            projectId: "profit-7fa47",
+            storageBucket: "profit-7fa47.firebasestorage.app",
+            messagingSenderId: "860653115615",
+            appId: "1:860653115615:web:c7d489f81ec00ae52e316a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        let exams = [], results = [], activeEx = null, timer = null, readCount = 0;
+
+        // --- BUTON HADİSƏLƏRİ ---
+        document.getElementById('navLogo').onclick = () => location.reload();
+        document.getElementById('adminTrigger').onclick = () => document.getElementById('adminLoginModal').style.display='flex';
+        document.getElementById('btnGoToExams').onclick = () => switchP('examsPage');
+        document.getElementById('btnBackHome').onclick = () => switchP('homePage');
+        
+        document.getElementById('btnSubmitAdmin').onclick = () => {
+            if(document.getElementById('adminPassInput').value === 'manifestacademy') {
+                document.getElementById('adminLoginModal').style.display='none';
+                document.getElementById('adminPanelModal').style.display='flex';
+            } else { alert("Şifrə Səhvdir!"); }
+        };
+
+        function switchP(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // --- VERİLƏNLƏRİN OXUNMASI ---
+        onValue(ref(db, 'results'), s => {
+            results = s.val() ? Object.keys(s.val()).map(k => ({...s.val()[k], id:k})) : [];
+            renderRes('all');
+            document.getElementById('adm-results-list').innerHTML = "<h4>Nəticələr:</h4>" + results.map(r => `
+                <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee; font-size:13px;">
+                    <span>${r.name} (${r.score}%)</span><button class="btn-danger del-btn" data-path="results/${r.id}">Sil</button>
+                </div>`).join('');
+        });
+
+        onValue(ref(db, 'exams'), s => {
+            exams = s.val() ? Object.keys(s.val()).map(k => ({...s.val()[k], id:k})) : [];
+            document.getElementById('exam-list').innerHTML = exams.map((ex, i) => `
+                <div class="q-node" style="text-align:center; padding:25px;">
+                    <h3 style="color:var(--primary)">${ex.title}</h3>
+                    <p style="margin-bottom:15px;">${ex.category} - cu sinif sınağı</p>
+                    <button class="btn btn-primary start-btn" data-idx="${i}">Sınağa Başla</button>
+                </div>`).join('');
+            document.getElementById('adm-exams-list').innerHTML = "<h4>Sınaqlar:</h4>" + exams.map(ex => `
+                <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee; font-size:13px;">
+                    <span>${ex.title}</span><button class="btn-danger del-btn" data-path="exams/${ex.id}">Sil</button>
+                </div>`).join('');
+        });
+
+        function renderRes(f) {
+            let d = results.sort((a,b)=>b.score-a.score);
+            if(f!=='all') d = d.filter(r=>String(r.studentClass)===f);
+            document.getElementById('results-list').innerHTML = d.map((r,i)=>`
+                <div class="result-row">
+                    <div style="font-weight:800; color:#999;">#${i+1}</div>
+                    <div style="font-weight:700;">${r.name}</div>
+                    <div style="color:#888;">${r.studentClass} Sinif</div>
+                    <div style="text-align:right; font-weight:800; color:var(--primary);">${r.score}%</div>
+                </div>`).join('');
+        }
+
+        document.getElementById('filterBar').onclick = (e) => {
+            if(e.target.dataset.filter) {
+                document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+                e.target.classList.add('active');
+                renderRes(e.target.dataset.filter);
+            }
+        };
+
+        // --- İMTAHAN PROSESİ ---
+        document.addEventListener('click', (e) => {
+            if(e.target.classList.contains('start-btn')) {
+                const ex = exams[e.target.dataset.idx];
+                if(ex.secret && prompt("Sınaq şifrəsini daxil edin:") !== ex.secret) return alert("Şifrə yanlışdır!");
+                const name = prompt("Ad və Soyadınız:"); if(!name) return;
+                
+                activeEx = {...ex, stName: name, allQ: []};
+                document.getElementById('examStage').style.display='block';
+                let h = `<h2 style="text-align:center; margin-bottom:20px;">${ex.title}</h2>`;
+                if(ex.audio) h+=`<div class="q-node"><audio src="${ex.audio}" controls style="width:100%;"></audio></div>`;
+                
+                const draw = (qs, pref) => {
+                    qs.forEach((q, i) => {
+                        let qh = `<div class="q-node"><p style="font-weight:700; margin-bottom:10px;">${i+1}. ${q.text}</p>`;
+                        if(q.type==='v') {
+                            q.opts.forEach((o,oi)=> { 
+                                if(o) qh+=`<label style="display:block; margin:12px 0; font-size:15px; cursor:pointer;"><input type="radio" name="${pref}-${i}" value="${String.fromCharCode(97+oi)}"> ${String.fromCharCode(65+oi)}) ${o}</label>`; 
+                            });
+                        } else { qh+=`<input type="text" id="ans-${pref}-${i}" placeholder="Cavabınızı yazın...">`; }
+                        h += qh + `</div>`;
+                        activeEx.allQ.push({...q, domId: `${pref}-${i}`});
+                    });
+                };
+                if(ex.listening) draw(ex.listening, 'l');
+                if(ex.readings) ex.readings.forEach((r,ri)=>{ h+=`<div class="q-node" style="background:#f9f9f9; border-left:5px solid var(--primary); font-size:15px;">${r.text.replace(/\n/g, '<br>')}</div>`; draw(r.questions, `r-${ri}`); });
+                if(ex.grammar) draw(ex.grammar, 'g');
+                
+                document.getElementById('stage-content').innerHTML = h;
+                let t = ex.time * 60;
+                timer = setInterval(()=>{
+                    document.getElementById('timerDisplay').innerText = `QALAN VAXT: ${Math.floor(t/60)}:${t%60<10?'0':''}${t%60}`;
+                    if(t-- <= 0) document.getElementById('btnFinishExam').click();
+                },1000);
+            }
+            if(e.target.classList.contains('del-btn')) { if(confirm("Məlumat silinsin?")) remove(ref(db, e.target.dataset.path)); }
+        });
+
+        document.getElementById('btnFinishExam').onclick = () => {
+            clearInterval(timer);
+            let score = 0;
+            activeEx.allQ.forEach(q => {
+                const ans = q.type==='v' ? (document.querySelector(`input[name="${q.domId}"]:checked`)?.value||"") : document.getElementById(`ans-${q.domId}`).value.trim().toLowerCase();
+                if(ans === q.correct.toLowerCase()) score++;
+            });
+            const p = Math.round((score/activeEx.allQ.length)*100);
+            push(ref(db, 'results'), {name: activeEx.stName, studentClass: activeEx.category, examTitle: activeEx.title, score: p}).then(()=>location.reload());
+        };
+
+        // --- ADMİN PANEL FUNKSİYALARI ---
+        function createQNode() {
+            const div = document.createElement('div'); 
+            div.className="q-node";
+            div.innerHTML = `
+                <input type="text" class="q-txt" placeholder="Sualın özü">
+                <select class="q-type" onchange="this.nextElementSibling.style.display = (this.value==='v'?'grid':'none')">
+                    <option value="v">Variantlı</option>
+                    <option value="o">Açıq sual</option>
+                </select>
+                <div class="opt-grid">
+                    <input type="text" class="opt" placeholder="A variantı">
+                    <input type="text" class="opt" placeholder="B variantı">
+                    <input type="text" class="opt" placeholder="C variantı">
+                    <input type="text" class="opt" placeholder="D variantı">
+                    <input type="text" class="opt" placeholder="E variantı">
+                </div>
+                <input type="text" class="q-ans" placeholder="Düzgün cavab (a, b, c, d, e)">
+            `;
+            return div;
+        }
+
+        document.getElementById('cntList').onchange = (e) => {
+            const c = document.getElementById('list-qs'); c.innerHTML="";
+            for(let i=0; i<e.target.value; i++) c.appendChild(createQNode());
+        };
+        document.getElementById('cntGram').onchange = (e) => {
+            const c = document.getElementById('gram-qs'); c.innerHTML="";
+            for(let i=0; i<e.target.value; i++) c.appendChild(createQNode());
+        };
+        document.getElementById('btnAddReading').onclick = () => {
+            const id = `rd-${readCount++}`;
+            const div = document.createElement('div'); div.className="q-node"; div.style.background="#f0f7ff";
+            div.innerHTML = `<textarea class="rd-txt" style="height:120px;" placeholder="Mətni buraya yapışdırın..."></textarea><input type="number" class="rd-cnt" placeholder="Mətnə aid sual sayı"><div id="${id}"></div>`;
+            document.getElementById('read-blocks').appendChild(div);
+            div.querySelector('.rd-cnt').onchange = (e) => {
+                const c = document.getElementById(id); c.innerHTML="";
+                for(let i=0; i<e.target.value; i++) c.appendChild(createQNode());
+            };
+        };
+
+        document.getElementById('btnSaveExam').onclick = () => {
+            const collect = (cid) => {
+                const cont = document.getElementById(cid);
+                if(!cont) return [];
+                return Array.from(cont.querySelectorAll('.q-node')).map(n => ({
+                    text: n.querySelector('.q-txt').value,
+                    type: n.querySelector('.q-type').value,
+                    correct: n.querySelector('.q-ans').value.trim(),
+                    opts: Array.from(n.querySelectorAll('.opt')).map(o => o.value)
+                }));
+            };
+            const data = {
+                title: document.getElementById('inpExTitle').value,
+                time: document.getElementById('inpExTime').value,
+                category: document.getElementById('inpExClass').value,
+                secret: document.getElementById('inpExSecret').value,
+                audio: document.getElementById('inpAudio').value,
+                listening: collect('list-qs'),
+                grammar: collect('gram-qs'),
+                readings: Array.from(document.querySelectorAll('#read-blocks > .q-node')).map((rn, i) => ({
+                    text: rn.querySelector('.rd-txt').value,
+                    questions: collect(`rd-${i}`)
+                }))
+            };
+            if(!data.title) return alert("Sınaq adını daxil edin!");
+            push(ref(db, 'exams'), data).then(()=>location.reload());
+        };
+    </script>
+</body>
+</html>
